@@ -1,4 +1,4 @@
-module.exports = function makeCreateUser({ Joi, usersDb }) {
+module.exports = function makeCreateUser({ Joi, usersDb, createUserCredentials, tenantsDb }) {
     return async function createUser({
         domain, name, email, status = 'pending', is_super_admin = false, address, zipcode, city, state, country, password
     }) {
@@ -16,12 +16,25 @@ module.exports = function makeCreateUser({ Joi, usersDb }) {
             const tenantDetails = await usersDb.getTenentByDomain({ domain });
             let tenantAndUserDetails;
             if (!tenantDetails) {
-                tenantAndUserDetails = await usersDb.createTenantAndUser({ domain, name, email, status, is_super_admin, address, zipcode, city, state, country });
+                tenantAndUserDetails = await usersDb.createTenantAndUser({
+                    domain, name, email, status, is_super_admin, address, zipcode, city, state, country
+                });
             } else {
                 throw new Error('Tenant with same name already exist!');
             }
 
             // internal api call to pass data into auth service for storing credentials.
+            const apiData = await createUserCredentials({
+                linkname: domain,
+                userId: tenantAndUserDetails.user.id,
+                password,
+            });
+
+            if (apiData && apiData.id) {
+                // updating status for users and tenant tables.
+                await usersDb.updateUserStatus({ status: 'completed', id: tenantAndUserDetails.user.id });
+                await tenantsDb.updateTenantStatus({ status, id: tenantAndUserDetails.tenant.id })
+            }
 
             return tenantAndUserDetails;
         } catch (error) {

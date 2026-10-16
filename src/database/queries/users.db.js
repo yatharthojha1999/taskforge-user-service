@@ -7,8 +7,8 @@ async function createTenantAndUser({ domain, name, email, status, is_super_admin
     const client = await pool.connect(); // getting temp pool connection only for this transaction. as they need same session.
     try {
         await client.query("BEGIN"); // starting of transaction
-        const tenantQuery = `INSERT INTO ${TENANTS_TABLE_NAME} (domain) VALUES ($1) RETURNING id, domain, is_active, created_at;`;
-        const tenantResult = await client.query(tenantQuery, [domain]);
+        const tenantQuery = `INSERT INTO ${TENANTS_TABLE_NAME} (domain, is_active) VALUES ($1, $2) RETURNING id, domain, is_active, created_at;`;
+        const tenantResult = await client.query(tenantQuery, [domain, false]);
         const tenant = tenantResult.rows[0];
         const userQuery = `
             INSERT INTO ${USERS_TABLE_NAME} (linkname, name, email, status, is_super_admin,
@@ -39,7 +39,20 @@ async function getTenentByDomain({ domain }) {
     return tenantResult.rows[0] ?? null;
 }
 
+async function updateUserStatus({ status, id }) {
+    const whereCondition = `id = $2`;
+    let setCondition = `status = $1`;
+    const values = [status, id];
+    const query = `UPDATE ${USERS_TABLE_NAME} SET ${setCondition} WHERE ${whereCondition}`;
+    const result = await pool.query(
+        query,
+        values,
+    );
+    return result.rows[0];
+}
+
 module.exports = Object.freeze({
     createTenantAndUser,
     getTenentByDomain,
+    updateUserStatus,
 });
