@@ -10,6 +10,13 @@ const createUser = makeCreateUser({
     tenantsDb,
 });
 
+const makeGetUserByLinknameAndEmail = require('./get-user-by-linkname-and-email');
+const getUserByLinknameAndEmail = makeGetUserByLinknameAndEmail({
+    Joi,
+    usersDb,
+});
+
 module.exports = {
     createUser,
+    getUserByLinknameAndEmail,
 }

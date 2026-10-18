@@ -51,8 +51,21 @@ async function updateUserStatus({ status, id }) {
     return result.rows[0];
 }
 
+async function getUserByDomain({ domain, email }) {
+    let whereClause = `linkname=$1`;
+    const values = [domain];
+    if (email) {
+        whereClause += ` AND email=$2`;
+        values.push(email);
+    }
+    const tenantQuery = `SELECT * FROM ${USERS_TABLE_NAME} WHERE ${whereClause};`;
+    const tenantResult = await pool.query(tenantQuery, values);
+    return tenantResult.rows[0] ?? null;
+}
+
 module.exports = Object.freeze({
     createTenantAndUser,
     getTenentByDomain,
     updateUserStatus,
+    getUserByDomain,
 });
