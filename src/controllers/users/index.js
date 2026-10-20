@@ -10,7 +10,13 @@ const getUserByLinknameAndEmailAction = makeGetUserByLinknameAndEmailAction({
     getUserByLinknameAndEmailUsecase: usersUsecase.getUserByLinknameAndEmail,
 });
 
+const makeValidateLinkAction = require('./validate-link');
+const validateLinkAction = makeValidateLinkAction({
+    validateLinkUsecase: usersUsecase.validateLink,
+});
+
 module.exports = {
     createUserAction,
     getUserByLinknameAndEmailAction,
+    validateLinkAction,
 }

@@ -14,6 +14,13 @@ async function updateTenantStatus({ status, id }) {
     return result.rows[0];
 }
 
+async function getTenentByDomain({ domain }) {
+    const tenantQuery = `SELECT * FROM ${TABLE_NAME} WHERE domain=$1;`;
+    const tenantResult = await pool.query(tenantQuery, [domain]);
+    return tenantResult.rows[0] ?? null;
+}
+
 module.exports = Object.freeze({
     updateTenantStatus,
+    getTenentByDomain,
 });

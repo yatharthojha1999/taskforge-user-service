@@ -16,7 +16,14 @@ const getUserByLinknameAndEmail = makeGetUserByLinknameAndEmail({
     usersDb,
 });
 
+const makeValidateLink = require('./validate-link');
+const validateLink = makeValidateLink({
+    Joi,
+    tenantsDb,
+});
+
 module.exports = {
     createUser,
     getUserByLinknameAndEmail,
+    validateLink,
 }
