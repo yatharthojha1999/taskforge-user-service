@@ -21,5 +21,5 @@ function getAuthConfig() {
 
 module.exports = {
     getAuthConfig,
-    authService: "http://localhost:3001"
+    authService: process.env.AUTH_SERVICE_URL || "http://localhost:3001"
 }

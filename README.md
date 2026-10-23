@@ -1,158 +1,92 @@
-# TaskForge AI
-
-TaskForge AI is a backend-focused project exploring how to build a maintainable, scalable, multi-tenant project and task management platform.
-
-The project is being developed incrementally, with an emphasis on backend engineering, clean code organization, database design, and production-oriented development practices.
-
-## Current Features
-
-- Express.js HTTP server
-- Health-check API endpoint
-- PostgreSQL database connectivity using the `pg` package
-- Environment-based configuration using `.env`
-- Feature-oriented controller and use-case organization
-- Initial Clean Architecture principles
-
-## Technology Stack
-
-- **Runtime:** Node.js
-- **Language:** JavaScript (CommonJS)
-- **HTTP framework:** Express.js
-- **Database:** PostgreSQL
-- **Database driver:** node-postgres (`pg`)
-- **Configuration:** dotenv
-- **Version control:** Git
-
-## Project Structure
-
-```text
-TaskForge AI/
-├── src/
-│   ├── server.js
-│   ├── routes.js
-│   ├── controllers/
-│   │   └── health-check/
-│   ├── usecases/
-│   │   └── health-check/
-│   └── infrastructure/
-│       └── database/
-│           └── postgres.js
-├── database/
-│   └── migrations/
-├── tests/
-├── .env.example
-├── .gitignore
-├── package.json
-└── README.md
-```
-
-The structure will evolve as additional features and infrastructure components are implemented.
-
-## Prerequisites
-
-- Node.js and npm
+TaskForge AI --- User Service
+The User Service manages tenant and user records for TaskForge AI. It is
+a Node.js/Express service using PostgreSQL and Joi validation.
+Current responsibilities
+- Register a tenant and its initial user.
+- Store tenant/user data in the taskforge_users database.
+- Request credential creation from the Auth Service during
+  registration.
+- Provide an internal user lookup used by the Auth Service.
+- Keep the initial user pending until credential creation succeeds, as
+  implemented by the registration flow.
+Technology
+- Node.js
+- Express
 - PostgreSQL
-- Git
+- Joi
+- Docker Compose
+Run with Docker Compose
+Run commands from the main taskforge-ai repository root.
 
-## Getting Started
+Ensure the root .env contains POSTGRES_PASSWORD, and ensure the
+PostgreSQL container has a database named taskforge_users. If it does
+not exist, create it:
+docker compose exec postgres psql -U taskforge -d postgres -c "CREATE DATABASE taskforge_users;"
+Run the User Service migrations:
+docker compose --profile migrations run --build --rm user-migrate
+Start or rebuild the service:
+docker compose up -d --build user-service
+Check status and logs:
+docker compose ps
+docker compose logs --tail=80 user-service
+The service is exposed at http://localhost:3000 on the host. Other
+Compose services should reach it at http://user-service:3000.
+Environment variables
+  Variable             Docker Compose value / purpose
+  PORT               3000
+  DB_HOST            postgres
+  DB_PORT            5432
+  DB_NAME            taskforge_users
+  DB_USER            taskforge
+  DB_PASSWORD        Read from root .env as POSTGRES_PASSWORD
+  AUTH_SERVICE_URL   http://auth-service:3001 in Docker
 
-### 1. Clone the repository
+The application configuration should read process.env.AUTH_SERVICE_URL
+and use http://localhost:3001 only as a fallback for local
+development.
+API routes
+  Method                  Endpoint                                                 Purpose
+  POST                  /v1/tenants/register                                   Register a tenant and
+                                                                                   its initial user
 
-```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd "TaskForge AI"
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure environment variables
-
-Create a `.env` file in the project root.
-
-Configure the required variables using your local PostgreSQL credentials:
-
-```dotenv
-PORT=3000
-
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=taskforge
-DB_USER=postgres
-DB_PASSWORD=your_local_password
-```
-
-Replace the example password with your own local PostgreSQL password. Never commit your real `.env` file.
-
-### 4. Start the server
-
-```bash
-npm start
-```
-
-The server performs a PostgreSQL connectivity check during startup. If the initial database connection fails, the server does not start successfully.
-
-## API Endpoints
-
-### Health Check
-
-**Endpoint:** `GET /health`
-
-**Purpose:** Checks that the health-check endpoint is reachable.
-
-Example request:
-
-```http
-GET http://localhost:3000/health
-```
-
-Example response:
-
-```json
-{
-  "status": "Ok"
-}
-```
-
-The current health-check endpoint returns application status. It is not a continuous database-health monitor.
-
-## Development Approach
-
-The project is being developed incrementally with an emphasis on:
-
-- Separation of controllers, use cases, and infrastructure
-- Dependency injection where appropriate
-- Explicit database access and schema management
-- Environment-based configuration
-- Version-controlled changes
-- Testing and validation as features are added
-
-## Planned Features
-
-The following are planned, not yet implemented:
-
-- Database migration workflow
-- Tenant registration and management
-- User authentication and authorization
-- Organization and project management
-- Task management and comments
-- Redis caching
-- Event-driven processing with Kafka
-- AI-powered features
-- Containerization and deployment
-
-## Project Status
-
-**Current milestone:** Express server, health-check endpoint, and PostgreSQL startup connectivity check.
-
-The project is under active development. Features and architecture will evolve as new milestones are completed.
-
-## Security
-
-- Keep `.env` out of version control.
-- Never commit passwords, tokens, or private keys.
-- Use environment variables for local configuration.
-- Use managed secrets and appropriately restricted database credentials in deployed environments.
+  GET                   /internal/v1/tenants/:linkname/users/by-email/:email   Internal lookup by
+                                                                                   tenant link name and
+                                                                               email
+The internal lookup is used by the Auth Service. Confirm required
+fields, validation rules, status codes, and response formats in the
+current route/controller/validator implementation before using these
+endpoints.
+Database
+The service database is taskforge_users. After migrations, the
+expected tables are:
+- tenants
+- users
+- pgmigrations
+Verify:
+docker compose exec postgres psql -U taskforge -d taskforge_users -c "\dt"
+Run migrations again after adding a new migration file:
+docker compose --profile migrations run --build --rm user-migrate
+Service-to-service registration flow
+1. The registration request reaches the User Service.
+2. The service creates the tenant/user records according to its
+   registration logic.
+3. It calls the Auth Service through AUTH_SERVICE_URL to create
+   credentials.
+4. The user is marked active only after credential creation succeeds;
+   otherwise, the registration flow handles the failure and keeps the
+   data consistent according to the implemented logic.
+Inside Docker, do not hardcode localhost:3001 for Auth Service calls.
+localhost inside a container refers to that same container.
+Troubleshooting
+docker compose logs --tail=100 user-service
+docker compose exec user-service printenv AUTH_SERVICE_URL
+Expected Docker URL:
+http://auth-service:3001
+If PostgreSQL reports that the database does not exist, create the
+database and run the migration job. Do not remove the PostgreSQL volume
+to resolve this issue.
+Tests and documentation
+Registration has been tested in the Dockerized environment. Keep this
+status current as additional tests are performed. When adding endpoints
+or migrations, update this README with the method, path,
+request/response examples, configuration changes, and test results.
