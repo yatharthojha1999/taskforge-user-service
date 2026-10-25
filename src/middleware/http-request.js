@@ -52,9 +52,21 @@ function middleware({
             };
 
             // 4. Call controller
-            return await controller({ httpRequest });
+            const result = await controller({ httpRequest });
+            return res.status(200).json(result);
         } catch (error) {
-            return error;
+            console.error("HTTP request failed:", error);
+            const statusCode = Number.isInteger(error.statusCode)
+                && error.statusCode >= 400
+                && error.statusCode <= 599
+                ? error.statusCode
+                : 500;
+
+            return res.status(statusCode).json({
+                message: statusCode === 500
+                    ? "Internal server error"
+                    : error.message,
+            });
         }
     };
 }

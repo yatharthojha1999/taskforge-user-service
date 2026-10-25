@@ -63,9 +63,35 @@ async function getUserByDomain({ domain, email }) {
     return tenantResult.rows[0] ?? null;
 }
 
+async function getUserById({ id, linkname }) {
+    const query = `
+        SELECT
+            id,
+            linkname,
+            name,
+            email,
+            status,
+            is_super_admin,
+            address,
+            zipcode,
+            city,
+            state,
+            country,
+            created_at,
+            updated_at
+        FROM ${USERS_TABLE_NAME}
+        WHERE id = $1 AND linkname = $2;
+    `;
+
+    const result = await pool.query(query, [id, linkname]);
+
+    return result.rows[0] ?? null;
+}
+
 module.exports = Object.freeze({
     createTenantAndUser,
     getTenentByDomain,
     updateUserStatus,
     getUserByDomain,
+    getUserById,
 });

@@ -15,8 +15,14 @@ const validateLinkAction = makeValidateLinkAction({
     validateLinkUsecase: usersUsecase.validateLink,
 });
 
+const makeGetUserByIdAction = require("./get-user-by-id");
+const getUserByIdAction = makeGetUserByIdAction({
+    getUserByIdUsecase: usersUsecase.getUserById,
+});
+
 module.exports = {
     createUserAction,
     getUserByLinknameAndEmailAction,
     validateLinkAction,
+    getUserByIdAction,
 }

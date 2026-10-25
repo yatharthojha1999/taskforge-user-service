@@ -22,8 +22,15 @@ const validateLink = makeValidateLink({
     tenantsDb,
 });
 
+const makeGetUserById = require("./get-user-by-id");
+const getUserById = makeGetUserById({
+    Joi,
+    usersDb,
+});
+
 module.exports = {
     createUser,
     getUserByLinknameAndEmail,
     validateLink,
+    getUserById,
 }
