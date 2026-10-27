@@ -20,9 +20,21 @@ const getUserByIdAction = makeGetUserByIdAction({
     getUserByIdUsecase: usersUsecase.getUserById,
 });
 
+const makeUpdateUserAction = require("./update-user");
+const updateUserAction = makeUpdateUserAction({
+    updateUserUsecase: usersUsecase.updateUser,
+});
+
+const makeDeleteUserAction = require("./delete-user");
+const deleteUserAction = makeDeleteUserAction({
+    deleteUser: usersUsecase.deleteUser,
+});
+
 module.exports = {
     createUserAction,
     getUserByLinknameAndEmailAction,
     validateLinkAction,
     getUserByIdAction,
+    updateUserAction,
+    deleteUserAction,
 }

@@ -28,9 +28,23 @@ const getUserById = makeGetUserById({
     usersDb,
 });
 
+const makeUpdateUser = require("./update-user");
+const updateUser = makeUpdateUser({
+    Joi,
+    usersDb,
+});
+
+const makeDeleteUser = require("./delete-user");
+const deleteUser = makeDeleteUser({
+    Joi,
+    usersDb,
+});
+
 module.exports = {
     createUser,
     getUserByLinknameAndEmail,
     validateLink,
     getUserById,
+    updateUser,
+    deleteUser,
 }

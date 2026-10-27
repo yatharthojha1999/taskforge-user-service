@@ -26,4 +26,18 @@ router.get("/v1/users/:id", middleware({
     })
 );
 
+router.patch("/v1/users/:id", middleware({
+        controller: users.updateUserAction,
+        validateLink: userUsecase.validateLink,
+        verifyAccessToken,
+    })
+);
+
+router.delete("/v1/users/:id", middleware({
+        controller: users.deleteUserAction,
+        validateLink: userUsecase.validateLink,
+        verifyAccessToken,
+    })
+);
+
 module.exports = router;

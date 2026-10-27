@@ -88,10 +88,89 @@ async function getUserById({ id, linkname }) {
     return result.rows[0] ?? null;
 }
 
+
+async function updateUser({
+    id,
+    linkname,
+    updatedBy,
+    ...fields
+}) {
+    const allowedFields = {
+        name: "name",
+        address: "address",
+        zipcode: "zipcode",
+        city: "city",
+        state: "state",
+        country: "country",
+    };
+
+    const setClauses = [];
+    const values = [];
+
+    for (const [field, value] of Object.entries(fields)) {
+        if (Object.hasOwn(allowedFields, field)) {
+            values.push(value);
+            setClauses.push(
+                `${allowedFields[field]} = $${values.length}`
+            );
+        }
+    }
+
+    if (setClauses.length === 0) {
+        const error = new Error("No valid fields provided for update");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    values.push(updatedBy);
+    setClauses.push(`updated_by = $${values.length}`);
+
+    setClauses.push("updated_at = CURRENT_TIMESTAMP");
+
+    values.push(id);
+    const idPlaceholder = values.length;
+
+    values.push(linkname);
+    const linknamePlaceholder = values.length;
+
+    const query = `
+        UPDATE ${USERS_TABLE_NAME}
+        SET ${setClauses.join(", ")}
+        WHERE id = $${idPlaceholder}
+          AND linkname = $${linknamePlaceholder}
+        RETURNING
+            id, linkname, name, email, status,
+            is_super_admin, address, zipcode, city,
+            state, country, created_at, updated_at;
+    `;
+
+    const result = await pool.query(query, values);
+
+    return result.rows[0] ?? null;
+}
+
+
+async function deleteUser({ id, linkname }) {
+    const query = `
+        DELETE FROM ${USERS_TABLE_NAME}
+        WHERE id = $1
+          AND linkname = $2
+        RETURNING id, linkname, name, email;
+    `;
+
+    const result = await pool.query(query, [id, linkname]);
+
+    return result.rows[0] ?? null;
+}
+
+
+
 module.exports = Object.freeze({
     createTenantAndUser,
     getTenentByDomain,
     updateUserStatus,
     getUserByDomain,
     getUserById,
+    updateUser,
+    deleteUser,
 });
