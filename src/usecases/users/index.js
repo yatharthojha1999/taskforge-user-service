@@ -40,6 +40,13 @@ const deleteUser = makeDeleteUser({
     usersDb,
 });
 
+const makeAddNewUserInTenant = require("./add-new-user-in-tenant");
+const addNewUserInTenant = makeAddNewUserInTenant({
+    Joi,
+    usersDb,
+    sendNewUserInvitation: authService.newUserInvitation,
+});
+
 module.exports = {
     createUser,
     getUserByLinknameAndEmail,
@@ -47,4 +54,5 @@ module.exports = {
     getUserById,
     updateUser,
     deleteUser,
+    addNewUserInTenant,
 }

@@ -30,6 +30,12 @@ const deleteUserAction = makeDeleteUserAction({
     deleteUser: usersUsecase.deleteUser,
 });
 
+const makeAddNewUserAction = require("./add-new-user-in-tenant");
+const addNewUserAction = makeAddNewUserAction({
+    createUser: usersUsecase.addNewUserInTenant,
+});
+
+
 module.exports = {
     createUserAction,
     getUserByLinknameAndEmailAction,
@@ -37,4 +43,5 @@ module.exports = {
     getUserByIdAction,
     updateUserAction,
     deleteUserAction,
+    addNewUserAction,
 }

@@ -40,4 +40,12 @@ router.delete("/v1/users/:id", middleware({
     })
 );
 
+router.post(
+    "/v1/users",
+    middleware({
+        controller: users.addNewUserAction,
+        validateLink: userUsecase.validateLink,
+        verifyAccessToken,
+    })
+);
 module.exports = router;

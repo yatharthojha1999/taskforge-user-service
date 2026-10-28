@@ -7,6 +7,13 @@ const createUserCredentials = makeCreateUserCredentials({
     authService,
 });
 
+const makeNewUserInvitation = require('./new-user-invitation');
+const newUserInvitation = makeNewUserInvitation({
+    axios,
+    authService,
+});
+
 module.exports = {
     createUserCredentials,
+    newUserInvitation,
 }

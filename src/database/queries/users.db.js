@@ -164,6 +164,58 @@ async function deleteUser({ id, linkname }) {
 }
 
 
+async function createUser({
+    linkname,
+    name,
+    email,
+    address,
+    zipcode,
+    city,
+    state,
+    country,
+    createdBy,
+}) {
+    const query = `
+        INSERT INTO users (
+            linkname,
+            name,
+            email,
+            status,
+            is_super_admin,
+            address,
+            zipcode,
+            city,
+            state,
+            country,
+            created_by,
+            updated_by
+        )
+        VALUES (
+            $1, $2, $3, 'pending', FALSE,
+            $4, $5, $6, $7, $8, $9, $9
+        )
+        RETURNING *;
+    `;
+
+    const values = [
+        linkname,
+        name,
+        email,
+        address ?? null,
+        zipcode ?? null,
+        city ?? null,
+        state ?? null,
+        country ?? null,
+        createdBy,
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows[0];
+}
+
+
+
 
 module.exports = Object.freeze({
     createTenantAndUser,
